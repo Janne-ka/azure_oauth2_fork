@@ -65,7 +65,10 @@ module OmniAuth
 
       def raw_info
         # it's all here in JWT http://msdn.microsoft.com/en-us/library/azure/dn195587.aspx
-        @raw_info ||= ::JWT.decode(access_token.token, nil, false).first
+        #@raw_info ||= ::JWT.decode(access_token.token, nil, false).first
+        jw = JWT.decode(access_token.token, nil, false)
+        Rails.logger.fatal("AZURE JWT count #{jw.count}:  #{jw}")
+        @raw_info ||= ::jw.first
       end
 
     end
