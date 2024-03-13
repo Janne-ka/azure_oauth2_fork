@@ -71,13 +71,44 @@ module OmniAuth
         full_host + script_name + callback_path
       end
 
+      # https://docs.microsoft.com/en-us/azure/active-directory/develop/id-tokens
+      #
+      # Some account types from Microsoft seem to only have a decodable ID token,
+      # with JWT unable to decode the access token. Information is limited in those
+      # cases. Other account types provide an expanded set of data inside the auth
+      # token, which does decode as a JWT.
+      #
+      # Merge the two, allowing the expanded auth token data to overwrite the ID
+      # token data if keys collide, and use this as raw info.
+      #
       def raw_info
+        Rails.logger.fatal("RAW INFO")
+        if @raw_info.nil?
+          id_token_data = begin
+            ::JWT.decode(access_token.params['id_token'], nil, false).first
+          rescue StandardError
+            {}
+          end
+          auth_token_data = begin
+            ::JWT.decode(access_token.token, nil, false).first
+          rescue StandardError
+            {}
+          end
+
+          id_token_data.merge!(auth_token_data)
+          @raw_info = id_token_data
+        end
+   Rails.logger.fatal(@raw_info)
+        @raw_info
+      end
+    
+     # def raw_info
         # it's all here in JWT http://msdn.microsoft.com/en-us/library/azure/dn195587.aspx
         #@raw_info ||= ::JWT.decode(access_token.token, nil, false).first
-        jw = ::JWT.decode(access_token.token, nil, false)
-        Rails.logger.fatal("AZURE JWT count #{jw.count}:  #{jw}")
-        @raw_info ||= jw.first
-      end
+      #  jw = ::JWT.decode(access_token.token, nil, false)
+      #  Rails.logger.fatal("AZURE JWT count #{jw.count}:  #{jw}")
+      #  @raw_info ||= jw.first
+      #end
 
     end
   end
