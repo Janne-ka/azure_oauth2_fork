@@ -63,7 +63,8 @@ module OmniAuth
 
       def token_params
         azure_resource = request.env['omniauth.params'] && request.env['omniauth.params']['azure_resource']
-        super.merge(resource: azure_resource || options.resource)
+        # resource not supported for v2
+        #super.merge(resource: azure_resource || options.resource)
       end
 
       def callback_url
